@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat - DocuMind AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <style>
+        .chat-layout {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 1.5rem;
+            height: calc(100vh - 120px);
+        }
+
+        @media (max-width: 900px) {
+            .chat-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .analytics-sidebar {
+                display: none;
+            }
+        }
+
+        .analytics-sidebar {
+            background: var(--surface-dark);
+            border-radius: var(--border-radius-lg);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .stat-box {
+            background: rgba(15, 23, 42, 0.6);
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 1rem;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-top: 0.5rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        .status-answered {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+        }
+
+        .status-unanswered {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        .source-chunks {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: var(--border-radius);
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .suggestions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .suggestion-chip {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .suggestion-chip:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .source-tag {
+            background: rgba(var(--secondary-color-rgb), 0.1);
+            color: var(--secondary-color);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border: 1px solid rgba(var(--secondary-color-rgb), 0.2);
+            margin-right: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-layout">
+        <div id="sidebar-container"></div>
+
+        <main class="main-content"
+            style="padding: 0; display: flex; flex-direction: column; overflow: hidden; max-width: none; margin: 0;">
+            <div style="display: flex; height: 100vh; width: 100%;">
+
+                <!-- Chat History Sidebar (Phase 2 Detail) -->
+                <aside
+                    style="width: 320px; background: #ffffff; border-right: 1px solid var(--border-light); display: flex; flex-direction: column;">
+                    <div style="padding: 1.5rem; border-bottom: 1px solid var(--border-light); display: flex; flex-direction: column; gap: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <h3 style="font-weight: 700; font-size: 1.1rem;">Conversations</h3>
+                            <button onclick="clearAllChat()" 
+                                style="background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 1.25rem;" 
+                                title="Clear All History">🗑️</button>
+                        </div>
+                        <button onclick="startNewChat()" class="btn btn-primary" style="width: 100%; border-radius: 8px; font-size: 0.85rem; padding: 0.6rem;">
+                            + New Conversation
+                        </button>
+                    </div>
+                    <div id="history-list" style="flex-grow: 1; overflow-y: auto; padding: 1rem;">
+                        <!-- JS will populate meaningful history items here -->
+                        <div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 2rem;">
+                            Loading history...</div>
+                    </div>
+                </aside>
+
+                <!-- Workspace / Main Chat -->
+                <div
+                    style="flex-grow: 1; display: flex; flex-direction: column; background: var(--background-main); position: relative;">
+                    <!-- Chat Header -->
+                    <header
+                        style="padding: 1.25rem 2.5rem; background: #ffffff; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; z-index: 10;">
+                        <div>
+                            <h2 style="font-weight: 700; font-size: 1.25rem;">AI Workspace</h2>
+                            <div
+                                style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: #10b981;">
+                                <span style="width: 8px; height: 8px; background: #10b981; border-radius: 50%;"></span>
+                                Ready to assist
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 12px;">
+                            <button id="toggleAnalytics" class="btn btn-secondary"
+                                style="padding: 0.5rem 1rem; font-size: 0.85rem;">📊 Analytics</button>
+                        </div>
+                    </header>
+
+                    <!-- Messages -->
+                    <div id="chatMessages"
+                        style="flex-grow: 1; overflow-y: auto; padding: 2.5rem; display: flex; flex-direction: column; gap: 2rem;">
+                        <!-- Initial Message -->
+                        <div style="max-width: 800px; margin: 0 auto; width: 100%;">
+                            <div style="display: flex; gap: 16px; align-items: flex-start;">
+                                <div
+                                    style="width: 36px; height: 36px; background: var(--primary-color); color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">
+                                    🤖</div>
+                                <div>
+                                    <div style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.95rem;">Assistant
+                                    </div>
+                                    <div
+                                        style="background: #ffffff; padding: 1.25rem; border-radius: 0 16px 16px 16px; border: 1px solid var(--border-light); box-shadow: var(--shadow-sm); line-height: 1.6; font-size: 0.95rem;">
+                                        Hello! I'm your DocuMind assistant. I've indexed your documents and I'm ready to
+                                        answer any questions. What would you like to explore today?
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Input Area -->
+                    <div
+                        style="padding: 1.5rem 2.5rem; background: linear-gradient(to top, var(--background-main) 80%, transparent);">
+                        <div style="max-width: 850px; margin: 0 auto;">
+                            <!-- Suggestions -->
+                            <div id="suggestions"
+                                style="display: flex; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap;">
+                                <div class="suggestion-chip"
+                                    style="background: white; border: 1px solid var(--border-light); padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; cursor: pointer; transition: all 0.2s;">
+                                    View Summary</div>
+                                <div class="suggestion-chip"
+                                    style="background: white; border: 1px solid var(--border-light); padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; cursor: pointer; transition: all 0.2s;">
+                                    Leave Policy</div>
+                                <div class="suggestion-chip"
+                                    style="background: white; border: 1px solid var(--border-light); padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; cursor: pointer; transition: all 0.2s;">
+                                    Reimbursement Rules</div>
+                            </div>
+
+                            <form id="chatForm"
+                                style="background: #ffffff; border: 1px solid #d1d5db; border-radius: 16px; display: flex; align-items: center; padding: 6px 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: border-color 0.2s;">
+                                <button type="button" id="chatMicBtn"
+                                    style="background: none; border: none; padding: 8px; cursor: pointer; color: var(--text-muted); transition: color 0.2s;">🎤</button>
+                                <input type="text" id="chatInput" placeholder="Ask anything about your library..."
+                                    style="flex-grow: 1; border: none; padding: 12px; font-size: 1rem; outline: none; background: transparent;">
+                                <button type="submit" id="chatSubmitBtn"
+                                    style="background: var(--primary-color); color: white; border: none; width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s;">🚀</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytics Pane (Collapsible) -->
+                <aside id="analyticsSidebar"
+                    style="width: 380px; background: #ffffff; border-left: 1px solid var(--border-light); display: none; flex-direction: column; overflow: hidden; animation: slideIn 0.3s ease;">
+                    <div
+                        style="padding: 1.5rem; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="font-weight: 700; font-size: 1.1rem;">Retrieval Analytics</h3>
+                        <button id="closeAnalytics"
+                            style="background: none; border: none; cursor: pointer; font-size: 1.25rem;">&times;</button>
+                    </div>
+                    <div id="statsContent"
+                        style="padding: 1.5rem; overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; gap: 1.5rem;">
+                        <div id="emptyStats" style="text-align: center; padding: 3rem 0; color: var(--text-muted);">
+                            <div style="font-size: 2rem; margin-bottom: 1rem;">🔍</div>
+                            <p style="font-size: 0.9rem;">Ask a question to view sentiment, confidence, and source
+                                citations here.</p>
+                        </div>
+
+                        <div id="realStats" class="hidden" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                            <!-- Metrics Grid -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                <div class="card" style="padding: 1rem; text-align: center;">
+                                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">
+                                        Confidence</div>
+                                    <div id="statConf"
+                                        style="font-weight: 700; font-size: 1.25rem; color: var(--primary-color);">0%
+                                    </div>
+                                </div>
+                                <div class="card" style="padding: 1rem; text-align: center;">
+                                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">
+                                        Distance</div>
+                                    <div id="statDist"
+                                        style="font-weight: 700; font-size: 1.25rem; color: var(--secondary-color);">
+                                        0.000</div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4 style="font-size: 0.9rem; margin-bottom: 0.75rem;">Source Chunks</h4>
+                                <div id="statChunks"
+                                    style="font-size: 0.85rem; line-height: 1.6; color: var(--text-muted); display: flex; flex-direction: column; gap: 12px;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal for Summary (Reusing from Upload if needed) -->
+
+    <script src="/static/js/main-v2.js"></script>
+    <script>
+        let currentQuestion = "";
+        let currentAnswer = "";
+        let currentConversationId = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            Auth.requireAuth();
+            const user = Auth.getUser();
+
+            const form = document.getElementById('chatForm');
+            const input = document.getElementById('chatInput');
+            const messagesContainer = document.getElementById('chatMessages');
+            const submitBtn = document.getElementById('chatSubmitBtn');
+            const analyticsSidebar = document.getElementById('analyticsSidebar');
+
+            // Analytics Controls
+            document.getElementById('toggleAnalytics').onclick = () => {
+                analyticsSidebar.style.display = analyticsSidebar.style.display === 'flex' ? 'none' : 'flex';
+            };
+            document.getElementById('closeAnalytics').onclick = () => analyticsSidebar.style.display = 'none';
+
+            // Speech to Text (Mic) logic
+            const micBtn = document.getElementById('chatMicBtn');
+            let isRecording = false;
+
+            if ('webkitSpeechRecognition' in window || 'speechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                const recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'en-US';
+
+                recognition.onstart = () => {
+                    isRecording = true;
+                    micBtn.style.color = '#ef4444'; // var(--danger-color)
+                    micBtn.textContent = '🛑';
+                    input.placeholder = "Listening...";
+                };
+
+                recognition.onend = () => {
+                    isRecording = false;
+                    micBtn.style.color = 'var(--text-muted)';
+                    micBtn.textContent = '🎤';
+                    input.placeholder = "Ask anything about your library...";
+                };
+
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    input.value = transcript;
+                    // Trigger form submission
+                    form.dispatchEvent(new Event('submit', { cancelable: true }));
+                };
+
+                recognition.onerror = (event) => {
+                    console.error('Speech recognition error:', event.error);
+                    recognition.stop();
+                };
+
+                micBtn.onclick = () => {
+                    if (isRecording) {
+                        recognition.stop();
+                    } else {
+                        recognition.start();
+                    }
+                };
+            } else {
+                console.warn('Speech recognition not supported in this browser.');
+                micBtn.title = "Speech recognition not supported";
+                micBtn.style.opacity = '0.3';
+                micBtn.style.cursor = 'not-allowed';
+            }
+
+            // Suggestions
+            document.querySelectorAll('.suggestion-chip').forEach(chip => {
+                chip.onclick = () => { input.value = chip.textContent; input.focus(); };
+            });
+
+            // Initial History Load
+            loadChatHistory();
+
+            async function loadChatHistory() {
+                const historyList = document.getElementById('history-list');
+                try {
+                    const res = await apiRequest(`/chat/history?email=${encodeURIComponent(user.email)}`, 'GET');
+                    if (res.status === 200 && Array.isArray(res.data)) {
+                        if (res.data.length === 0) {
+                            historyList.innerHTML = '<div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 2rem;">No recent chats.</div>';
+                            return;
+                        }
+
+                        // Group all messages by conversation_id
+                        const conversationsMap = {};
+                        res.data.forEach(msg => {
+                            const cid = msg.conversation_id || 'legacy';
+                            if (!conversationsMap[cid]) conversationsMap[cid] = [];
+                            conversationsMap[cid].push(msg);
+                        });
+
+                        const conversations = Object.values(conversationsMap).sort((a, b) => {
+                            return new Date(b[0].timestamp) - new Date(a[0].timestamp);
+                        });
+
+                        // Group by date for display
+                        const groups = { 'Today': [], 'Yesterday': [], 'Last 7 Days': [], 'Older': [] };
+                        const now = new Date();
+                        
+                        conversations.forEach(conv => {
+                            const d = new Date(conv[0].timestamp); // Use date of first message
+                            const diffDays = Math.floor((now - d) / (1000 * 60 * 60 * 24));
+                            if (diffDays === 0) groups['Today'].push(conv);
+                            else if (diffDays === 1) groups['Yesterday'].push(conv);
+                            else if (diffDays < 7) groups['Last 7 Days'].push(conv);
+                            else groups['Older'].push(conv);
+                        });
+
+                        historyList.innerHTML = '';
+                        Object.keys(groups).forEach(label => {
+                            if (groups[label].length === 0) return;
+                            
+                            const header = document.createElement('div');
+                            header.style.fontSize = '0.75rem';
+                            header.style.color = 'var(--text-muted)';
+                            header.style.fontWeight = '700';
+                            header.style.textTransform = 'uppercase';
+                            header.style.marginTop = '1.5rem';
+                            header.style.marginBottom = '0.5rem';
+                            header.style.paddingLeft = '4px';
+                            header.textContent = label;
+                            historyList.appendChild(header);
+
+                            groups[label].forEach(conv => {
+                                const item = document.createElement('div');
+                                item.className = 'history-item';
+                                item.style.padding = '10px 12px';
+                                item.style.borderRadius = '8px';
+                                item.style.cursor = 'pointer';
+                                item.style.marginBottom = '4px';
+                                item.style.fontSize = '0.85rem';
+                                item.style.transition = 'all 0.2s';
+                                item.style.whiteSpace = 'nowrap';
+                                item.style.overflow = 'hidden';
+                                item.style.textOverflow = 'ellipsis';
+                                item.style.border = '1px solid transparent';
+                                if (currentConversationId === conv[0].conversation_id) {
+                                    item.style.background = '#f1f5f9';
+                                    item.style.borderColor = 'var(--border-light)';
+                                }
+                                
+                                // Title is the first question
+                                item.innerHTML = `💬 ${conv[0].question}`;
+                                
+                                item.onclick = () => {
+                                    document.querySelectorAll('.history-item').forEach(i => {
+                                        i.style.background = 'transparent';
+                                        i.style.borderColor = 'transparent';
+                                    });
+                                    item.style.background = '#f1f5f9';
+                                    item.style.borderColor = 'var(--border-light)';
+                                    
+                                    viewConversation(conv);
+                                };
+                                
+                                item.onmouseover = () => {
+                                    if(item.style.background !== 'rgb(241, 245, 249)') item.style.background = '#f8fafc';
+                                };
+                                item.onmouseout = () => {
+                                    if(item.style.background !== 'rgb(241, 245, 249)') item.style.background = 'transparent';
+                                };
+                                historyList.appendChild(item);
+                            });
+                        });
+                    }
+                } catch (e) { console.error('History load failed', e); }
+            }
+
+            window.viewConversation = (messages) => {
+                currentConversationId = messages[0].conversation_id;
+                messagesContainer.innerHTML = ''; // Clear current
+                messages.forEach(msg => {
+                    addMessage(msg.question, 'user', msg.id);
+                    addMessage(msg.answer, 'assistant', msg.id, msg);
+                });
+                
+                const lastMsg = messages[messages.length - 1];
+                const dataForAnalytics = {...lastMsg};
+                if (typeof dataForAnalytics.chunks === 'string') {
+                    try { dataForAnalytics.chunks = JSON.parse(dataForAnalytics.chunks); } catch(e) {}
+                }
+                updateAnalytics(dataForAnalytics);
+            };
+
+            window.startNewChat = () => {
+                currentConversationId = null;
+                messagesContainer.innerHTML = `
+                    <div style="max-width: 800px; margin: 0 auto; width: 100%;">
+                        <div style="display: flex; gap: 16px; align-items: flex-start;">
+                            <div style="width: 36px; height: 36px; background: var(--primary-color); color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">🤖</div>
+                            <div>
+                                <div style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.95rem;">Assistant</div>
+                                <div style="background: #ffffff; padding: 1.25rem; border-radius: 0 16px 16px 16px; border: 1px solid var(--border-light); box-shadow: var(--shadow-sm); line-height: 1.6; font-size: 0.95rem;">
+                                    Starting a new conversation. How can I help you with your documents today?
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('emptyStats').classList.remove('hidden');
+                document.getElementById('realStats').classList.add('hidden');
+                document.querySelectorAll('.history-item').forEach(i => {
+                    i.style.background = 'transparent';
+                    i.style.borderColor = 'transparent';
+                });
+                input.focus();
+            };
+
+            form.onsubmit = async (e) => {
+                e.preventDefault();
+                const question = input.value.trim();
+                if (!question) return;
+
+                currentQuestion = question;
+                addMessage(question, 'user');
+                input.value = '';
+
+                // Add loading state
+                const loadingId = 'loading-' + Date.now();
+                const loadingDiv = addMessage('Thinking...', 'assistant', loadingId);
+
+                // Load settings from localStorage
+                const settings = JSON.parse(localStorage.getItem('hr_settings') || '{}');
+
+                const payload = {
+                    user_email: user.email,
+                    question: question,
+                    groq_api_key: settings.groq_key || "YOUR_GROQ_API_KEY_HERE",
+                    retrieval_depth: settings.depth || 3,
+                    threshold: settings.threshold || 0.8,
+                    conversation_id: currentConversationId
+                };
+
+                const res = await apiRequest('/chat', 'POST', payload);
+                loadingDiv.remove();
+
+                if (res.status === 200) {
+                    currentConversationId = res.data.conversation_id;
+                    addMessage(res.data.answer, 'assistant', res.data.id);
+                    updateAnalytics(res.data);
+                    currentAnswer = res.data.answer;
+                    
+                    // Refresh history sidebar to show/update the conversation
+                    loadChatHistory();
+                } else {
+                    const errorDetail = res.data?.detail || 'Sorry, I encountered an error processing your request.';
+                    addMessage(`⚠️ **Error:** ${errorDetail}`, 'assistant');
+                }
+            };
+
+            function addMessage(text, sender, id = null, dataObj = null) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'message-wrapper';
+                wrapper.style.maxWidth = '800px';
+                wrapper.style.margin = '0 auto';
+                wrapper.style.width = '100%';
+                if (id) wrapper.setAttribute('data-chat-id', id);
+
+                // Add an onclick to assistant messages to show their analytics if clicked
+                if (sender === 'assistant' && dataObj) {
+                    wrapper.style.cursor = 'pointer';
+                    wrapper.onclick = () => updateAnalytics(dataObj);
+                }
+
+                const inner = document.createElement('div');
+                inner.style.display = 'flex';
+                inner.style.gap = '16px';
+                inner.style.alignItems = 'flex-start';
+                if (sender === 'user') inner.style.flexDirection = 'row-reverse';
+
+                const avatar = document.createElement('div');
+                avatar.style.width = '36px';
+                avatar.style.height = '36px';
+                avatar.style.borderRadius = '8px';
+                avatar.style.display = 'flex';
+                avatar.style.alignItems = 'center';
+                avatar.style.justifyContent = 'center';
+                avatar.style.fontSize = '1.2rem';
+                avatar.style.flexShrink = '0';
+                avatar.style.background = sender === 'assistant' ? 'var(--primary-color)' : 'var(--background-alt)';
+                avatar.style.color = sender === 'assistant' ? 'white' : 'var(--text-main)';
+                avatar.style.overflow = 'hidden';
+                
+                if (sender === 'assistant') {
+                    avatar.innerHTML = '🤖';
+                } else {
+                    const user = Auth.getUser();
+                    if (user && user.profile_pic) {
+                        avatar.innerHTML = `<img src="${user.profile_pic}" style="width: 100%; height: 100%; object-fit: cover;">`;
+                    } else {
+                        avatar.innerHTML = '👤';
+                    }
+                }
+
+                const content = document.createElement('div');
+                content.style.flexGrow = '1';
+                if (sender === 'user') content.style.textAlign = 'right';
+
+                const name = document.createElement('div');
+                name.style.fontWeight = '600';
+                name.style.marginBottom = '0.5rem';
+                name.style.fontSize = '0.9rem';
+                name.textContent = sender === 'assistant' ? 'Assistant' : 'You';
+
+                const bubble = document.createElement('div');
+                bubble.style.background = '#ffffff';
+                bubble.style.padding = '1.25rem';
+                bubble.style.borderRadius = sender === 'assistant' ? '0 16px 16px 16px' : '16px 0 16px 16px';
+                bubble.style.border = '1px solid var(--border-light)';
+                bubble.style.boxShadow = 'var(--shadow-sm)';
+                bubble.style.lineHeight = '1.6';
+                bubble.style.fontSize = '0.95rem';
+                bubble.style.wordBreak = 'break-word';
+                bubble.style.position = 'relative';
+
+                const textHtml = text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                bubble.innerHTML = textHtml;
+
+                if (sender === 'assistant') {
+                    const speakBtn = document.createElement('button');
+                    speakBtn.innerHTML = '🔊';
+                    speakBtn.style.position = 'absolute';
+                    speakBtn.style.bottom = '8px';
+                    speakBtn.style.right = '8px';
+                    speakBtn.style.background = 'none';
+                    speakBtn.style.border = 'none';
+                    speakBtn.style.cursor = 'pointer';
+                    speakBtn.style.fontSize = '1rem';
+                    speakBtn.style.opacity = '0.6';
+                    speakBtn.title = 'Speak Answer';
+                    speakBtn.onclick = () => speak(text);
+                    bubble.appendChild(speakBtn);
+                }
+
+                content.appendChild(name);
+                content.appendChild(bubble);
+                inner.appendChild(avatar);
+                inner.appendChild(content);
+                wrapper.appendChild(inner);
+                messagesContainer.appendChild(wrapper);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                return wrapper;
+            }
+
+            function updateAnalytics(data) {
+                document.getElementById('emptyStats').classList.add('hidden');
+                document.getElementById('realStats').classList.remove('hidden');
+                document.getElementById('statConf').textContent = `${(data.confidence || 0).toFixed(1)}%`;
+                document.getElementById('statDist').textContent = (data.distance || 0).toFixed(3);
+
+                const list = document.getElementById('statChunks');
+                list.innerHTML = '';
+                (data.chunks || []).forEach((c, idx) => {
+                    const item = document.createElement('div');
+                    item.style.padding = '12px';
+                    item.style.background = 'var(--background-main)';
+                    item.style.borderRadius = '8px';
+                    item.style.fontSize = '0.8rem';
+                    item.style.border = '1px solid var(--border-light)';
+                    item.innerHTML = `<strong style="color: var(--primary-color);">Source ${idx + 1}:</strong><br>${c}`;
+                    list.appendChild(item);
+                });
+
+                // Switch sidebar visible if hidden
+                if (analyticsSidebar.style.display === 'none') {
+                    analyticsSidebar.style.display = 'flex';
+                }
+            }
+
+            function speak(text) {
+                if ('speechSynthesis' in window) {
+                    // Cancel any ongoing speech
+                    window.speechSynthesis.cancel();
+                    const msg = new SpeechSynthesisUtterance();
+                    msg.text = text;
+                    window.speechSynthesis.speak(msg);
+                } else {
+                    alert('Sorry, your browser does not support text to speech.');
+                }
+            }
+        });
+
+        window.clearAllChat = async function () {
+            if (confirm("Clear all conversations?")) {
+                const user = Auth.getUser();
+                const res = await apiRequest(`/chat/history/all?email=${encodeURIComponent(user.email)}`, 'DELETE');
+                if (res.status === 200) window.location.reload();
+            }
+        };
+    </script>
+
+    <style>
+        .suggestion-chip:hover {
+            border-color: var(--primary-color) !important;
+            color: var(--primary-color) !important;
+            background: rgba(26, 86, 219, 0.05) !important;
+        }
+
+        #chatForm:focus-within {
+            border-color: var(--primary-color) !important;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+            }
+
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+    </style>
+</body>
+
+</html>

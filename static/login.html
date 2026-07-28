@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - DocuMind AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+
+<body>
+    <div class="center-flex" style="background: var(--background-alt);">
+        <div class="auth-container card">
+            <h2 class="text-center" style="font-size: 2rem; margin-bottom: 0.5rem;">Welcome Back</h2>
+            <p class="text-center mb-4" style="color: var(--text-muted);">Sign in to your DocuMind account</p>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" class="form-control" required placeholder="name@example.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" class="form-control" required placeholder="••••••••">
+                </div>
+
+                <div id="errorMessage" class="hidden"
+                    style="color: var(--danger-color); margin-bottom: 1rem; text-align: center;"></div>
+
+                <button type="submit" class="btn btn-primary btn-block mb-3">Login</button>
+            </form>
+
+            <p class="text-center" style="margin-top: 1.5rem;">
+                Don't have an account? <a href="/signup"
+                    style="color: var(--primary-color); text-decoration: none;">Sign Up</a>
+            </p>
+            <p class="text-center mt-2">
+                <a href="/" style="color: var(--text-muted); text-decoration: none; font-size: 0.875rem;">← Back to
+                    Home</a>
+            </p>
+        </div>
+    </div>
+
+    <script src="/static/js/main-v2.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            Auth.requireGuest();
+
+            const form = document.getElementById('loginForm');
+            const errBox = document.getElementById('errorMessage');
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                errBox.classList.add('hidden');
+
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const btn = form.querySelector('button[type="submit"]');
+
+                btn.textContent = 'Authenticating...';
+                btn.disabled = true;
+
+                const res = await apiRequest('/login', 'POST', { email, password });
+
+                if (res.status === 200) {
+                    Auth.login(res.data.user); // Will redirect
+                } else {
+                    errBox.textContent = res.data.detail || 'Login failed';
+                    errBox.classList.remove('hidden');
+                    btn.textContent = 'Login';
+                    btn.disabled = false;
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

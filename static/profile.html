@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - DocuMind AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+
+<body>
+    <div class="app-layout">
+        <div id="sidebar-container"></div>
+
+        <main class="main-content">
+            <header style="margin-bottom: 2.5rem;">
+                <h1 style="font-size: 2.25rem; font-weight: 800; letter-spacing: -0.5px;">Member Profile</h1>
+                <p style="color: var(--text-muted); font-size: 1.1rem;">Manage your professional identity and workspace
+                    settings.</p>
+            </header>
+
+            <div style="display: grid; grid-template-columns: 350px 1fr; gap: 2rem; align-items: start;">
+
+                <!-- Profile Summary Card -->
+                <div class="card" style="padding: 2.5rem; text-align: center; position: relative; overflow: hidden;">
+                    <div
+                        style="position: absolute; top: 0; left: 0; right: 0; height: 100px; background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); opacity: 0.1;">
+                    </div>
+
+                    <div id="profileAvatar"
+                        style="width: 120px; height: 120px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 4rem; margin: 0 auto 1.5rem; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 4px solid white; cursor: pointer; overflow: hidden;"
+                        title="Click to change photo">
+                        👤
+                    </div>
+                    <input type="file" id="photoInput" style="display: none;" accept="image/*">
+
+                    <h2 id="profName" style="font-weight: 800; font-size: 1.5rem; margin-bottom: 0.25rem;">User Name
+                    </h2>
+                    <div id="profRole" class="role-badge"
+                        style="display: inline-block; margin-bottom: 2rem; background: #eff6ff; color: var(--primary-color); font-weight: 600; font-size: 0.8rem; padding: 4px 12px; border-radius: 20px;">
+                        Organization Member</div>
+
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <button id="editProfileBtn" class="btn btn-primary" style="width: 100%;">Edit Profile</button>
+                        <button class="btn btn-secondary" style="width: 100%;">Account Settings</button>
+                    </div>
+                </div>
+
+                <!-- Profile Details -->
+                <div style="display: flex; flex-direction: column; gap: 2rem;">
+                    <div class="card" style="padding: 2rem;">
+                        <h4
+                            style="font-weight: 700; margin-bottom: 2rem; display: flex; align-items: center; gap: 10px;">
+                            <span>📋</span> Personal Information
+                        </h4>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                            <div>
+                                <small
+                                    style="color: var(--text-muted); text-transform: uppercase; font-size: 0.7rem; font-weight: 800; letter-spacing: 1px;">Full
+                                    Name</small>
+                                <p id="profName2" style="font-weight: 600; font-size: 1.1rem; margin-top: 4px;">
+                                    Loading...</p>
+                            </div>
+                            <div>
+                                <small
+                                    style="color: var(--text-muted); text-transform: uppercase; font-size: 0.7rem; font-weight: 800; letter-spacing: 1px;">Current
+                                    Role</small>
+                                <p id="profRole2" style="font-weight: 600; font-size: 1.1rem; margin-top: 4px;">Engineer
+                                </p>
+                            </div>
+                            <div style="grid-column: span 2;">
+                                <small
+                                    style="color: var(--text-muted); text-transform: uppercase; font-size: 0.7rem; font-weight: 800; letter-spacing: 1px;">Email
+                                    Address</small>
+                                <p id="profEmail" style="font-weight: 600; font-size: 1.1rem; margin-top: 4px;">
+                                    user@example.com</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card" style="padding: 2rem;">
+                        <h4
+                            style="font-weight: 700; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px;">
+                            <span>🛡️</span> Security & Access
+                        </h4>
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: #f8fafc; border-radius: 12px; margin-bottom: 1rem;">
+                            <div>
+                                <div style="font-weight: 700; font-size: 0.95rem;">Two-Factor Authentication</div>
+                                <div style="font-size: 0.85rem; color: var(--text-muted);">Add an extra layer of
+                                    security to your account.</div>
+                            </div>
+                            <button class="btn btn-secondary"
+                                style="font-size: 0.8rem; padding: 6px 12px;">Enable</button>
+                        </div>
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: #f8fafc; border-radius: 12px;">
+                            <div>
+                                <div style="font-weight: 700; font-size: 0.95rem;">Password Management</div>
+                                <div style="font-size: 0.85rem; color: var(--text-muted);">Change your password or
+                                    manage sessions.</div>
+                            </div>
+                            <button class="btn btn-secondary"
+                                style="font-size: 0.8rem; padding: 6px 12px;">Update</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div id="editModal" class="modal-overlay" style="display: none;">
+        <div class="card" style="width: 100%; max-width: 450px; position: relative;">
+            <span class="close-modal" id="closeEditModal">&times;</span>
+            <h3 style="margin-bottom: 1.5rem;">Edit Profile</h3>
+            <form id="editProfileForm">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="editName" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Current Role / Profession</label>
+                    <input type="text" id="editRole" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/js/main-v2.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            Auth.requireAuth();
+            let user = Auth.getUser();
+
+            const profileAvatar = document.getElementById('profileAvatar');
+            const photoInput = document.getElementById('photoInput');
+            const editBtn = document.getElementById('editProfileBtn');
+            const editModal = document.getElementById('editModal');
+            const closeBtn = document.getElementById('closeEditModal');
+            const editForm = document.getElementById('editProfileForm');
+
+            function updateUI() {
+                document.getElementById('profName').textContent = user.name || 'User';
+                document.getElementById('profName2').textContent = user.name || 'User';
+                document.getElementById('profRole').textContent = user.profession || 'Professional';
+                document.getElementById('profRole2').textContent = user.profession || 'Professional';
+                document.getElementById('profEmail').textContent = user.email || 'No email provided';
+                
+                if (user.profile_pic) {
+                    profileAvatar.innerHTML = `<img src="${user.profile_pic}" style="width: 100%; height: 100%; object-fit: cover;">`;
+                } else {
+                    profileAvatar.innerHTML = '👤';
+                }
+                
+                // Also update sidebar
+                renderSidebar();
+            }
+
+            updateUI();
+
+            // Photo Upload
+            profileAvatar.onclick = () => photoInput.click();
+            photoInput.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = async (event) => {
+                    const base64 = event.target.result;
+                    const res = await apiRequest('/user/profile', 'PUT', {
+                        email: user.email,
+                        profile_pic: base64
+                    });
+                    if (res.status === 200) {
+                        user = res.data;
+                        localStorage.setItem('hr_user', JSON.stringify(user));
+                        updateUI();
+                    } else {
+                        alert('Failed to update photo: ' + (res.data?.detail || 'Unknown error'));
+                    }
+                };
+                reader.readAsDataURL(file);
+            };
+
+            // Edit Text Fields
+            editBtn.onclick = () => {
+                document.getElementById('editName').value = user.name;
+                document.getElementById('editRole').value = user.profession;
+                editModal.style.display = 'flex';
+            };
+
+            closeBtn.onclick = () => editModal.style.display = 'none';
+            window.onclick = (e) => { if (e.target === editModal) editModal.style.display = 'none'; };
+
+            editForm.onsubmit = async (e) => {
+                e.preventDefault();
+                const newName = document.getElementById('editName').value;
+                const newRole = document.getElementById('editRole').value;
+
+                const res = await apiRequest('/user/profile', 'PUT', {
+                    email: user.email,
+                    name: newName,
+                    profession: newRole
+                });
+
+                if (res.status === 200) {
+                    user = res.data;
+                    localStorage.setItem('hr_user', JSON.stringify(user));
+                    updateUI();
+                    editModal.style.display = 'none';
+                } else {
+                    alert('Failed to update profile: ' + (res.data?.detail || 'Unknown error'));
+                }
+            };
+        });
+    </script>
+</body>
+
+</html>

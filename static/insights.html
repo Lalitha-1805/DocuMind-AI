@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Insights - DocuMind AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 1100px) {
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .topic-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-light);
+            transition: background 0.2s;
+        }
+
+        .topic-row:last-child {
+            border-bottom: none;
+        }
+
+        .topic-row:hover {
+            background: #f8fafc;
+        }
+
+        .progress-bar-bg {
+            height: 8px;
+            background: #f1f5f9;
+            border-radius: 4px;
+            width: 100px;
+            overflow: hidden;
+            margin-left: 1rem;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--primary-color);
+            transition: width 0.5s ease-out;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-layout">
+        <div id="sidebar-container"></div>
+
+        <main class="main-content">
+            <header style="margin-bottom: 2rem;">
+                <h1 style="font-size: 2rem; font-weight: 800; letter-spacing: -1px;">Insights</h1>
+                <p style="color: var(--text-muted); font-size: 0.95rem;">Usage analytics and query patterns</p>
+            </header>
+
+            <!-- KPI Cards Row -->
+            <div class="stat-card-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 2rem;">
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <div class="label">Total Queries</div>
+                        <div class="value" id="kpiTotal">0</div>
+                    </div>
+                    <div class="stat-icon" style="background: rgba(37, 99, 235, 0.1); color: var(--primary-color);">🔍
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <div class="label">Avg Response Time</div>
+                        <div class="value">1181ms</div>
+                        <div class="subtext">System average</div>
+                    </div>
+                    <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--secondary-color);">
+                        ⏱️</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <div class="label">Avg Confidence</div>
+                        <div class="value" id="kpiConf">0%</div>
+                    </div>
+                    <div class="stat-icon" style="background: rgba(124, 58, 237, 0.1); color: var(--accent-color);">🛡️
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <div class="label">Avg Sources/Query</div>
+                        <div class="value">1.5</div>
+                    </div>
+                    <div class="stat-icon" style="background: rgba(245, 158, 11, 0.1); color: var(--warning-color);">⚡
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Charts Grid -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                <!-- Query Activity -->
+                <div class="card" style="padding: 1.5rem;">
+                    <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 1.5rem;">Query Activity (14 days)
+                    </h4>
+                    <div style="height: 300px;">
+                        <canvas id="activityChart"></canvas>
+                    </div>
+                </div>
+                <!-- Categories -->
+                <div class="card" style="padding: 1.5rem;">
+                    <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 1.5rem;">Query Categories</h4>
+                    <div style="height: 300px;">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+                <!-- Confidence Distribution -->
+                <div class="card" style="padding: 1.5rem;">
+                    <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 1.5rem;">Confidence Distribution
+                    </h4>
+                    <div style="height: 300px;">
+                        <canvas id="confDistChart"></canvas>
+                    </div>
+                </div>
+                <!-- Knowledge Gaps -->
+                <div class="card" style="padding: 1.5rem; display: flex; flex-direction: column;">
+                    <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 1rem;">Document Coverage & Gaps</h4>
+                    <div id="coverageStatus" style="margin-bottom: 1.5rem;">
+                        <div style="display: flex; gap: 1rem; font-size: 0.8rem; margin-bottom: 8px;">
+                            <span style="display: flex; align-items: center; gap: 4px;"><i
+                                    style="width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></i>
+                                Indexed: <b id="statInd">0</b></span>
+                            <span style="display: flex; align-items: center; gap: 4px;"><i
+                                    style="width: 8px; height: 8px; border-radius: 50%; background: #fbbf24;"></i>
+                                Processing: 0</span>
+                            <span style="display: flex; align-items: center; gap: 4px;"><i
+                                    style="width: 8px; height: 8px; border-radius: 50%; background: #ef4444;"></i>
+                                Failed: 0</span>
+                        </div>
+                        <div
+                            style="height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; display: flex;">
+                            <div id="coverageFill" style="height: 100%; background: var(--primary-color); width: 0%;">
+                            </div>
+                            <div style="height: 100%; background: #6366f1; width: 0%;"></div>
+                        </div>
+                    </div>
+                    <div id="recentList"
+                        style="flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+                        <!-- JS items -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/static/js/main-v2.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            Auth.requireAuth();
+            const user = Auth.getUser();
+
+            // Handle Sidebar
+            if (typeof renderSidebar === 'function') {
+                renderSidebar();
+            }
+
+            try {
+                const res = await apiRequest(`/insights?email=${encodeURIComponent(user.email)}`, 'GET');
+                if (res.status === 200) {
+                    const data = res.data;
+
+                    document.getElementById('kpiTotal').textContent = data.total || 0;
+                    document.getElementById('kpiConf').textContent = (data.average_confidence || 0).toFixed(0) + '%';
+                    document.getElementById('statInd').textContent = data.answered || 0;
+                    document.getElementById('coverageFill').style.width = (data.coverage_percentage || 0) + '%';
+
+                    // 1. Activity Chart (Line)
+                    if (data.daily_activity) {
+                        new Chart(document.getElementById('activityChart'), {
+                            type: 'line',
+                            data: {
+                                labels: data.daily_activity.map(d => d.date.split('-').slice(1).join('/')),
+                                datasets: [{
+                                    label: 'Queries',
+                                    data: data.daily_activity.map(d => d.count),
+                                    borderColor: '#1a56db',
+                                    backgroundColor: 'rgba(26, 86, 219, 0.1)',
+                                    fill: true,
+                                    tension: 0.4,
+                                    pointRadius: 0
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: { legend: { display: false } },
+                                scales: {
+                                    y: { beginAtZero: true, grid: { color: '#f1f5f9' }, border: { display: false } },
+                                    x: { grid: { display: false }, border: { display: false } }
+                                }
+                            }
+                        });
+                    }
+
+                    // 2. Categories Chart (Doughnut)
+                    if (data.topics && data.topics.length > 0) {
+                        new Chart(document.getElementById('categoryChart'), {
+                            type: 'doughnut',
+                            data: {
+                                labels: data.topics.map(t => t.topic || 'General'),
+                                datasets: [{
+                                    data: data.topics.map(t => t.count),
+                                    backgroundColor: ['#1a56db', '#10b981', '#7c3aed', '#f59e0b', '#ef4444', '#6366f1'],
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: { legend: { position: 'bottom', labels: { boxWidth: 8, padding: 15, font: { size: 10 } } } },
+                                cutout: '70%'
+                            }
+                        });
+                    }
+
+                    // 3. Confidence Distribution (Bar)
+                    if (data.confidence_distribution) {
+                        new Chart(document.getElementById('confDistChart'), {
+                            type: 'bar',
+                            data: {
+                                labels: ['0-20%', '20-40%', '40-60%', '60-80%', '80-100%'],
+                                datasets: [{
+                                    data: [
+                                        data.confidence_distribution['0-20'],
+                                        data.confidence_distribution['20-40'],
+                                        data.confidence_distribution['40-60'],
+                                        data.confidence_distribution['60-80'],
+                                        data.confidence_distribution['80-100']
+                                    ],
+                                    backgroundColor: '#3b82f6',
+                                    borderRadius: 4
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: { legend: { display: false } },
+                                scales: {
+                                    y: { beginAtZero: true, grid: { color: '#f1f5f9' }, border: { display: false } },
+                                    x: { grid: { display: false }, border: { display: false } }
+                                }
+                            }
+                        });
+                    }
+
+                    // 4. Knowledge Gaps List
+                    const container = document.getElementById('recentList');
+                    if (data.recent_unanswered && data.recent_unanswered.length > 0) {
+                        container.innerHTML = '';
+                        data.recent_unanswered.forEach(q => {
+                            const div = document.createElement('div');
+                            div.className = 'activity-item';
+                            div.style.padding = '0.75rem';
+                            div.innerHTML = `<span style="color:#ef4444; font-weight:700;">•</span> <span style="font-size:0.85rem;">${q}</span>`;
+                            container.appendChild(div);
+                        });
+                    } else {
+                        container.innerHTML = '<div style="text-align: center; padding: 2rem; color: #10b981; font-size: 0.9rem;">No knowledge gaps identified.</div>';
+                    }
+                }
+            } catch (error) {
+                console.error('Insights load failed', error);
+            }
+        });
+    </script>
+</body>
+
+</html>

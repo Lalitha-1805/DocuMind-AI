@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DocuMind AI - Intelligent Document Infrastructure</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <style>
+    :root {
+      --nav-height: 80px;
+    }
+
+    /* --- Landing Navbar --- */
+    .landing-nav {
+      height: var(--nav-height);
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-light);
+      display: flex;
+      align-items: center;
+      padding: 0 5%;
+    }
+
+    .nav-content {
+      width: 100%;
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      font-size: 1.4rem;
+      color: var(--text-main);
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--text-muted);
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--primary-color);
+    }
+
+    /* --- Hero Section --- */
+    .hero-section {
+      padding-top: calc(var(--nav-height) + 100px);
+      padding-bottom: 60px;
+      background: radial-gradient(circle at top right, rgba(26, 86, 219, 0.05), transparent 40%),
+        radial-gradient(circle at bottom left, rgba(67, 56, 202, 0.05), transparent 40%);
+      text-align: center;
+    }
+
+    .hero-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      padding: 8px 16px;
+      background: #eff6ff;
+      color: var(--primary-color);
+      border-radius: 50px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      border: 1px solid #dbeafe;
+    }
+
+    .hero-section h1 {
+      font-size: 5rem;
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -2px;
+      margin-bottom: 2rem;
+    }
+
+    @media (max-width: 768px) {
+      .hero-section h1 {
+        font-size: 3rem;
+      }
+    }
+
+    .hero-section p {
+      font-size: 1.25rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 3rem;
+      max-width: 750px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .cta-group {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-bottom: 2rem;
+    }
+
+    .btn-xl {
+      padding: 1.25rem 3rem;
+      font-size: 1.1rem;
+      font-weight: 700;
+      border-radius: 12px;
+      text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .btn-xl:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(26, 86, 219, 0.2);
+    }
+
+    /* --- Features Overview --- */
+    .section-header {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2rem;
+      max-width: 1400px;
+      margin: 0 auto 100px;
+      padding: 0 2rem;
+    }
+
+    @media (max-width: 1100px) {
+      .features-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .landing-card {
+      background: white;
+      padding: 2.5rem;
+      border-radius: 24px;
+      border: 1px solid var(--border-light);
+      transition: all 0.3s;
+    }
+
+    .landing-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+      border-color: var(--primary-color);
+    }
+
+    .icon-box {
+      width: 60px;
+      height: 60px;
+      background: #f8fafc;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+      transition: background 0.3s;
+    }
+
+    .landing-card:hover .icon-box {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    /* --- Footer --- */
+    .landing-footer {
+      background: #f8fafc;
+      padding: 80px 5% 40px;
+      border-top: 1px solid var(--border-light);
+    }
+
+    .footer-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1.5fr repeat(3, 1fr);
+      gap: 4rem;
+      margin-bottom: 60px;
+    }
+
+    .footer-col h4 {
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+    }
+
+    .footer-col ul {
+      list-style: none;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .footer-col a {
+      text-decoration: none;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+
+    .footer-col a:hover {
+      color: var(--primary-color);
+    }
+
+    .footer-bottom {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding-top: 40px;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav class="landing-nav">
+    <div class="nav-content">
+      <a href="/" class="logo-group">
+        <span style="font-size: 2rem;">🚀</span>
+        <span>DocuMind AI</span>
+      </a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="/signup" class="btn btn-primary" style="padding: 0.6rem 2rem;">Get Started</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero-section">
+      <div class="hero-container">
+        <div class="hero-badge">Your Intelligent Document Brain</div>
+        <h1 class="text-gradient">Turn Documents into<br>Instant Answers.</h1>
+        <p>DocuMind AI reads your PDFs so you don't have to. Ask questions, get answers, and master your knowledge in seconds.</p>
+
+        <div class="cta-group">
+          <a href="/signup" class="btn btn-primary btn-xl">Get Started — It's Free</a>
+          <a href="#features" class="btn btn-secondary btn-xl">Explore Features</a>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section id="features" style="padding: 60px 0;">
+      <div class="section-header">
+        <h2 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 1rem;">Core Capabilities</h2>
+        <p style="color: var(--text-muted);">Everything you need to master your documentation.</p>
+      </div>
+
+      <div class="features-grid">
+        <div class="landing-card">
+          <div class="icon-box">💬</div>
+          <h3 style="font-weight: 700; margin-bottom: 1rem;">AI Chat</h3>
+          <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6;">Ask questions in plain English—or use your voice. Get precise answers that the AI can even read aloud to you.</p>
+        </div>
+        <div class="landing-card">
+          <div class="icon-box">🧠</div>
+          <h3 style="font-weight: 700; margin-bottom: 1rem;">Smart Memory</h3>
+          <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6;">Upload PDFs and let the system index them instantly. It breaks files into searchable "memory" for perfect recall.</p>
+        </div>
+        <div class="landing-card">
+          <div class="icon-box">📊</div>
+          <h3 style="font-weight: 700; margin-bottom: 1rem;">Visual Insights</h3>
+          <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6;">Identify knowledge gaps and monitor performance. See exactly what's being asked and how the AI is learning.</p>
+        </div>
+        <div class="landing-card">
+          <div class="icon-box">🛡️</div>
+          <h3 style="font-weight: 700; margin-bottom: 1rem;">Secure & Personal</h3>
+          <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6;">A system that remembers you. From your profile photo to your unique history, it's private and personal.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/js/main-v2.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Check if already logged in to redirect
+      const user = Auth.getUser();
+      if (user) {
+        // You might want to auto-redirect to dashboard
+        // window.location.href = '/dashboard';
+      }
+    });
+  </script>
+</body>
+
+</html>

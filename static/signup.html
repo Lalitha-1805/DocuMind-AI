@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - DocuMind AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+
+<body>
+    <div class="center-flex" style="background: var(--background-alt);">
+        <div class="auth-container card" style="margin: 2rem 0;">
+            <h2 class="text-center" style="font-size: 2rem; margin-bottom: 0.5rem;">Create Account</h2>
+            <p class="text-center mb-4" style="color: var(--text-muted);">Join the Secure Document Ecosystem</p>
+
+            <form id="signupForm">
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" class="form-control" required placeholder="John Doe">
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" class="form-control" required placeholder="john.doe@example.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="profession">Profession</label>
+                    <input type="text" id="profession" class="form-control" required placeholder="Software Engineer">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" class="form-control" required placeholder="••••••••">
+                </div>
+
+                <div class="form-group">
+                    <label for="conf_password">Confirm Password</label>
+                    <input type="password" id="conf_password" class="form-control" required placeholder="••••••••">
+                </div>
+
+                <div id="errorMessage" class="hidden"
+                    style="color: var(--danger-color); margin-bottom: 1rem; text-align: center;"></div>
+                <div id="successMessage" class="hidden"
+                    style="color: var(--secondary-color); margin-bottom: 1rem; text-align: center;">Account created!
+                    Redirecting to login...</div>
+
+                <button type="submit" class="btn btn-primary btn-block mb-3">Register</button>
+            </form>
+
+            <p class="text-center" style="margin-top: 1.5rem;">
+                Already have an account? <a href="/login"
+                    style="color: var(--primary-color); text-decoration: none;">Login</a>
+            </p>
+        </div>
+    </div>
+
+    <script src="/static/js/main-v2.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            Auth.requireGuest();
+
+            const form = document.getElementById('signupForm');
+            const errBox = document.getElementById('errorMessage');
+            const succBox = document.getElementById('successMessage');
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                errBox.classList.add('hidden');
+                succBox.classList.add('hidden');
+
+                const pwd = document.getElementById('password').value;
+                const conf = document.getElementById('conf_password').value;
+
+                if (pwd !== conf) {
+                    errBox.textContent = 'Passwords do not match!';
+                    errBox.classList.remove('hidden');
+                    return;
+                }
+
+                const payload = {
+                    name: document.getElementById('name').value,
+                    email: document.getElementById('email').value,
+                    profession: document.getElementById('profession').value,
+                    password: pwd
+                };
+
+                const btn = form.querySelector('button[type="submit"]');
+                btn.textContent = 'Registering...';
+                btn.disabled = true;
+
+                const res = await apiRequest('/signup', 'POST', payload);
+
+                if (res.status === 200) {
+                    succBox.classList.remove('hidden');
+                    setTimeout(() => window.location.href = '/login', 1500);
+                } else {
+                    let errorMessage = 'Registration failed';
+                    if (res.data.detail) {
+                        if (Array.isArray(res.data.detail)) {
+                            errorMessage = res.data.detail.map(err => `${err.loc.join('.')}: ${err.msg}`).join(', ');
+                        } else {
+                            errorMessage = res.data.detail;
+                        }
+                    }
+                    errBox.textContent = errorMessage;
+                    errBox.classList.remove('hidden');
+                    btn.textContent = 'Register';
+                    btn.disabled = false;
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

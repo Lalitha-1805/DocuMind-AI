@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+*.log
+.DS_Store
+.env
+output.txt
+chroma_db/
+uploaded_pdfs/
+*.sqlite3

@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leave Eligibility Calculator - DocuMind AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <style>
+        .calculator-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        @media (max-width: 900px) {
+            .calculator-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .input-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-main);
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 0.75rem 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--border-radius);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+            font-size: 1rem;
+            transition: all var(--transition-speed);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background: rgba(37, 99, 235, 0.1);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+        }
+
+        .form-group input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .results-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .entitlement-card {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .stat-box {
+            background: rgba(37, 99, 235, 0.1);
+            border: 1px solid rgba(37, 99, 235, 0.2);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            text-align: center;
+            transition: all var(--transition-speed);
+        }
+
+        .stat-box.warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: rgba(245, 158, 11, 0.2);
+        }
+
+        .stat-box.danger {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+
+        .stat-box.success {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: rgba(16, 185, 129, 0.2);
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-unit {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            border-radius: 6px;
+            transition: width 0.5s ease;
+            width: 0%;
+        }
+
+        .progress-text {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+            text-align: right;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            flex: 1;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .success-message {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #86efac;
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 0.8s linear infinite;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .policy-info {
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .policy-info strong {
+            color: var(--accent-color);
+        }
+
+        .breakdown-list {
+            list-style: none;
+            padding: 0;
+            margin-top: 1rem;
+        }
+
+        .breakdown-list li {
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 3px solid var(--primary-color);
+            margin-bottom: 0.5rem;
+            border-radius: 4px;
+        }
+
+        .breakdown-list li strong {
+            color: var(--secondary-color);
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-layout">
+        <div id="sidebar-container"></div>
+
+        <main class="main-content">
+            <header style="margin-bottom: 2.5rem; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1 style="font-size: 2.25rem; font-weight: 800; letter-spacing: -0.5px;">Leave & Eligibility</h1>
+                    <p style="color: var(--text-muted); font-size: 1.1rem;">Calculate your current leave balance and
+                        history.</p>
+                </div>
+            </header>
+
+            <div style="display: grid; grid-template-columns: 1fr 400px; gap: 2rem; align-items: start;">
+
+                <!-- Calculator Area -->
+                <div style="display: flex; flex-direction: column; gap: 2rem;">
+
+                    <div class="card" style="padding: 2rem;">
+                        <h3 style="font-weight: 700; margin-bottom: 1.5rem;">Entitlement Calculator</h3>
+
+                        <div id="errorMessage" class="hidden"
+                            style="background: #fff1f2; color: #e11d48; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid #fda4af; font-size: 0.9rem;">
+                        </div>
+                        <div id="successMessage" class="hidden"
+                            style="background: #f0fdf4; color: #166534; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid #bbf7d0; font-size: 0.9rem;">
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                            <div class="form-group">
+                                <label for="yearsOfService"
+                                    style="font-weight: 600; font-size: 0.9rem; margin-bottom: 0.5rem; display: block;">Years
+                                    of Service</label>
+                                <input type="number" id="yearsOfService" placeholder="0.0" step="0.1"
+                                    style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; outline: none; transition: border-color 0.2s;">
+                            </div>
+                            <div class="form-group">
+                                <label for="leaveType"
+                                    style="font-weight: 600; font-size: 0.9rem; margin-bottom: 0.5rem; display: block;">Leave
+                                    Type</label>
+                                <select id="leaveType"
+                                    style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; outline: none; background: white;">
+                                    <option value="">Select type...</option>
+                                    <option value="annual">Annual Leave</option>
+                                    <option value="sick">Sick Leave</option>
+                                    <option value="maternity">Maternity Leave</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-top: 1.5rem;">
+                            <label for="leaveTaken"
+                                style="font-weight: 600; font-size: 0.9rem; margin-bottom: 0.5rem; display: block;">Days
+                                Already Taken</label>
+                            <input type="number" id="leaveTaken" placeholder="0"
+                                style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; outline: none;">
+                        </div>
+
+                        <div style="margin-top: 2rem; display: flex; gap: 12px;">
+                            <button id="calculateBtn" onclick="calculateLeave()" class="btn btn-primary"
+                                style="flex: 1; padding: 0.8rem;">Calculate Balance</button>
+                            <button onclick="resetForm()" class="btn btn-secondary"
+                                style="padding: 0.8rem 1.5rem;">Reset</button>
+                        </div>
+                    </div>
+
+                    <!-- Results Section -->
+                    <div id="resultsContainer" class="hidden"
+                        style="display: flex; flex-direction: column; gap: 1.5rem; animation: fadeIn 0.4s ease;">
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;">
+                            <div class="card" style="padding: 1.5rem; text-align: center;">
+                                <div
+                                    style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">
+                                    Quota</div>
+                                <div id="totalEntitlement"
+                                    style="font-size: 2rem; font-weight: 800; color: var(--primary-color); margin-top: 0.5rem;">
+                                    0</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Total Days</div>
+                            </div>
+                            <div class="card" style="padding: 1.5rem; text-align: center;">
+                                <div
+                                    style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">
+                                    Consumed</div>
+                                <div id="leaveUsed"
+                                    style="font-size: 2rem; font-weight: 800; color: #64748b; margin-top: 0.5rem;">0
+                                </div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Used Days</div>
+                            </div>
+                            <div class="card"
+                                style="padding: 1.5rem; text-align: center; border: 1px solid #bbf7d0; background: #f0fdf4;">
+                                <div
+                                    style="font-size: 0.75rem; color: #166534; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">
+                                    Available</div>
+                                <div id="remainingLeave"
+                                    style="font-size: 2rem; font-weight: 800; color: #10b981; margin-top: 0.5rem;">0
+                                </div>
+                                <div style="font-size: 0.75rem; color: #166534;">Remaining Days</div>
+                            </div>
+                        </div>
+
+                        <div class="card" style="padding: 1.5rem;">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <h4 style="font-weight: 700;">Utilization Progress</h4>
+                                <span id="percentageUsed"
+                                    style="font-weight: 700; color: var(--primary-color);">0%</span>
+                            </div>
+                            <div style="height: 12px; background: #f1f5f9; border-radius: 10px; overflow: hidden;">
+                                <div id="progressFill"
+                                    style="width: 0%; height: 100%; background: var(--primary-color); transition: width 0.6s ease;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div id="emptyState" class="card"
+                        style="padding: 4rem; text-align: center; color: var(--text-muted); background: #f8fafc; border: 2px dashed #e2e8f0;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">⚖️</div>
+                        <h4 style="font-weight: 700; color: var(--text-main); margin-bottom: 0.5rem;">Ready to Calculate
+                        </h4>
+                        <p style="font-size: 0.95rem;">Enter your service details to see your calculated eligibility
+                            based on the current HR policy.</p>
+                    </div>
+                </div>
+
+                <!-- Info Sidebar -->
+                <aside style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    <div class="card" style="padding: 1.5rem; border-top: 4px solid var(--primary-color);">
+                        <h4
+                            style="font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px;">
+                            <span>📜</span> Current Policy
+                        </h4>
+                        <div id="policyRulesDisplay" class="hidden">
+                            <div style="display: flex; flex-direction: column; gap: 12px;" id="policyRulesList">
+                                <!-- JS items -->
+                            </div>
+                        </div>
+                        <div id="noPolicy" style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;">
+                            No specific policy document detected. Using default organization standards.
+                        </div>
+                    </div>
+
+                    <div class="card" style="padding: 1.5rem; background: #eef2ff; border: none;">
+                        <h4 style="font-weight: 700; color: #3730a3; margin-bottom: 0.5rem;">Note</h4>
+                        <p style="font-size: 0.85rem; color: #4338ca; line-height: 1.5;">Calculations are indicative.
+                            Please consult your HR representative for final approval before booking leave.</p>
+                    </div>
+                </aside>
+            </div>
+        </main>
+    </div>
+
+    <script src="/static/js/main-v2.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            Auth.requireAuth();
+            if (typeof renderSidebar === 'function') renderSidebar();
+            await loadPolicyRules();
+        });
+
+        async function loadPolicyRules() {
+            try {
+                const res = await apiRequest('/extract-leave-policies', 'GET');
+                if (res.status === 200) {
+                    const policies = res.data;
+                    const list = document.getElementById('policyRulesList');
+                    const noPolicyHead = document.getElementById('noPolicy');
+
+                    const rules = [
+                        { label: 'Annual (< 1yr)', val: policies.annual_lt_1 },
+                        { label: 'Annual (1-5yr)', val: policies.annual_1_5 },
+                        { label: 'Annual (> 5yr)', val: policies.annual_gt_5 },
+                        { label: 'Sick Leave', val: policies.sick },
+                        { label: 'Maternity', val: policies.maternity }
+                    ];
+
+                    list.innerHTML = rules.map(r => `
+                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; padding: 4px 0; border-bottom: 1px solid #f1f5f9;">
+                            <span style="color: var(--text-muted);">${r.label}</span>
+                            <span style="font-weight: 700; color: var(--text-main);">${r.val} Days</span>
+                        </div>
+                    `).join('');
+
+                    document.getElementById('policyRulesDisplay').classList.remove('hidden');
+                    noPolicyHead.classList.add('hidden');
+                }
+            } catch (e) { console.error('Policy extraction error', e); }
+        }
+
+        async function calculateLeave() {
+            const yos = document.getElementById('yearsOfService').value;
+            const type = document.getElementById('leaveType').value;
+            const taken = document.getElementById('leaveTaken').value;
+            const btn = document.getElementById('calculateBtn');
+
+            if (!yos || !type || taken === '') {
+                showMsg('errorMessage', 'Please fill in all fields.');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Calculating...';
+            clearMsgs();
+
+            try {
+                const res = await apiRequest('/calculate-leave', 'POST', {
+                    years_of_service: parseFloat(yos),
+                    leave_type: type,
+                    leave_taken: parseFloat(taken)
+                });
+
+                if (res.status === 200) {
+                    showResults(res.data);
+                } else {
+                    showMsg('errorMessage', res.data.detail || 'Calculation failed.');
+                }
+            } catch (err) {
+                showMsg('errorMessage', 'Connection error.');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Calculate Balance';
+            }
+        }
+
+        function showResults(data) {
+            document.getElementById('emptyState').classList.add('hidden');
+            const container = document.getElementById('resultsContainer');
+            container.classList.remove('hidden');
+
+            document.getElementById('totalEntitlement').textContent = data.total_entitlement;
+            document.getElementById('leaveUsed').textContent = data.leave_taken;
+            document.getElementById('remainingLeave').textContent = data.remaining_leave;
+            document.getElementById('percentageUsed').textContent = Math.round(data.percentage_used) + '%';
+            document.getElementById('progressFill').style.width = Math.min(data.percentage_used, 100) + '%';
+
+            if (window.innerWidth < 900) container.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function resetForm() {
+            document.getElementById('yearsOfService').value = '';
+            document.getElementById('leaveType').value = '';
+            document.getElementById('leaveTaken').value = '';
+            document.getElementById('resultsContainer').classList.add('hidden');
+            document.getElementById('emptyState').classList.remove('hidden');
+            clearMsgs();
+        }
+
+        function showMsg(id, txt) {
+            const el = document.getElementById(id);
+            el.textContent = txt;
+            el.classList.remove('hidden');
+        }
+
+        function clearMsgs() {
+            document.getElementById('errorMessage').classList.add('hidden');
+            document.getElementById('successMessage').classList.add('hidden');
+        }
+    </script>
+
+    <style>
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        input:focus,
+        select:focus {
+            border-color: var(--primary-color) !important;
+            box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.1);
+        }
+    </style>
+</body>
+
+</html>
