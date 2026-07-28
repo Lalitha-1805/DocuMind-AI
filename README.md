@@ -84,12 +84,6 @@ Start the backend:
 python server.py
 ```
 
-Start the Streamlit UI:
-
-```bash
-streamlit run app.py
-```
-
 ## ☁️ Cloud Deployment Notes
 
 This project is intended to be deployed in a cloud environment with:
